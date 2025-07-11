@@ -546,7 +546,7 @@ export default function DashboardAdmin() {
                     <th className="px-4 py-2 text-left">Store Name</th>
                     <th className="px-4 py-2 text-left">Email</th>
                     <th className="px-4 py-2 text-left">Address</th>
-                    <th className="px-4 py-2 text-left">Rating</th>
+                    <th className="px-4 py-2 text-left">Avg Rating</th>
                     <th className="px-4 py-2 text-left">Actions</th>
                   </tr>
                 </thead>
@@ -569,7 +569,7 @@ export default function DashboardAdmin() {
                         <td className="px-4 py-2">{store.name}</td>
                         <td className="px-4 py-2">{store.email}</td>
                         <td className="px-4 py-2">{store.address}</td>
-                        <td className="px-4 py-2">{store.avgRating !== null && store.avgRating !== undefined ? `${store.avgRating}/5` : <span className="text-gray-400">-</span>}</td>
+                        <td className="px-4 py-2">{store.avgrating !== null && store.avgrating !== undefined ? `${store.avgrating}/5` : <span className="text-gray-400">-</span>}</td>
                         <td className="px-4 py-2">
                           <button className="text-blue-600 hover:underline mr-2" onClick={() => openEditStore(store)}>Edit</button>
                           <button className="text-red-600 hover:underline" onClick={() => confirmDeleteStore(store.id)}>Delete</button>

@@ -42,7 +42,7 @@ export default function RateModal({ store, onClose, onSubmit, initialRating, loa
     setSubmitting(true);
     setError("");
     try {
-      await onSubmit({ rating, comment });
+      await onSubmit(store.id, rating, comment);
       // Don't close modal, just show success
     } catch (err) {
       setError(err.message || "Failed to submit rating.");

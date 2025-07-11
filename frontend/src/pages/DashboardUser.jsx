@@ -107,19 +107,39 @@ export default function DashboardUser() {
     setRatingError("");
     setRatingSuccess("");
     try {
-      const response = await fetch(`http://localhost:4000/user/rate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ storeId, rating, comment })
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        setRatingError(data.message || "Failed to submit rating.");
-        toast.error(data.message || "Failed to submit rating.");
+      let response, data;
+      if (initialRating) {
+        // If user has already rated, update the rating
+        response = await fetch(`http://localhost:4000/ratings/${storeId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ rating, comment })
+        });
+        data = await response.json();
+        if (!response.ok) {
+          setRatingError(data.message || "Failed to update rating.");
+          toast.error(data.message || "Failed to update rating.");
+        } else {
+          setRatingSuccess("Rating updated successfully!");
+          toast.success("Rating updated successfully!");
+          setRefresh(r => r + 1); // Refresh StoreList after update
+        }
       } else {
-        setRatingSuccess("Rating submitted successfully!");
-        toast.success("Rating submitted successfully!");
-        // Optionally refresh ratings list here
+        // New rating
+        response = await fetch(`http://localhost:4000/user/rate`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ storeId, rating, comment })
+        });
+        data = await response.json();
+        if (!response.ok) {
+          setRatingError(data.message || "Failed to submit rating.");
+          toast.error(data.message || "Failed to submit rating.");
+        } else {
+          setRatingSuccess("Rating submitted successfully!");
+          toast.success("Rating submitted successfully!");
+          setRefresh(r => r + 1); // Refresh StoreList after rating
+        }
       }
     } catch (err) {
       setRatingError("Network error. Please try again.");

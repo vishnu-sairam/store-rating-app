@@ -21,9 +21,9 @@ app.use(ownerRoutes);
 (async () => {
   try {
     await db.query('SELECT 1');
-    console.log('MySQL connected successfully!');
+    console.log('Postgres connected successfully!');
   } catch (err) {
-    console.error('MySQL connection failed:', err);
+    console.error('Postgres connection failed:', err);
   }
 })();
 

@@ -5,17 +5,17 @@ exports.getStoreRatings = async (req, res) => {
   try {
     // Find the store owned by this owner (by matching user email to store email)
     const ownerEmail = req.user.email;
-    const [stores] = await db.query('SELECT id FROM stores WHERE email = ?', [ownerEmail]);
+    const { rows: stores } = await db.query('SELECT id FROM stores WHERE email = $1', [ownerEmail]);
     if (stores.length === 0) {
       return res.status(404).json({ message: 'No store found for this owner.' });
     }
     const storeId = stores[0].id;
     // Get users and their ratings for this store
-    const [ratings] = await db.query(
+    const { rows: ratings } = await db.query(
       `SELECT users.id AS userId, users.name, users.email, ratings.rating, ratings.comment
        FROM ratings
        JOIN users ON ratings.user_id = users.id
-       WHERE ratings.store_id = ?`,
+       WHERE ratings.store_id = $1`,
       [storeId]
     );
     res.json(ratings);
@@ -28,16 +28,17 @@ exports.getAverageRating = async (req, res) => {
   try {
     // Find the store owned by this owner (by matching user email to store email)
     const ownerEmail = req.user.email;
-    const [stores] = await db.query('SELECT id FROM stores WHERE email = ?', [ownerEmail]);
+    const { rows: stores } = await db.query('SELECT id FROM stores WHERE email = $1', [ownerEmail]);
     if (stores.length === 0) {
       return res.status(404).json({ message: 'No store found for this owner.' });
     }
     const storeId = stores[0].id;
     // Get average rating for this store
-    const [[result]] = await db.query(
-      'SELECT AVG(rating) AS averageRating FROM ratings WHERE store_id = ?',
+    const { rows } = await db.query(
+      'SELECT AVG(rating) AS averageRating FROM ratings WHERE store_id = $1',
       [storeId]
     );
+    const result = rows[0];
     res.json({ averageRating: result.averageRating ? Number(result.averageRating).toFixed(2) : null });
   } catch (err) {
     res.status(500).json({ message: 'Failed to fetch average rating for your store.', error: err.message });
@@ -47,8 +48,8 @@ exports.getAverageRating = async (req, res) => {
 exports.getMyStore = async (req, res) => {
   try {
     const ownerEmail = req.user.email;
-    const [stores] = await db.query(
-      'SELECT id, name, email, address FROM stores WHERE email = ?',
+    const { rows: stores } = await db.query(
+      'SELECT id, name, email, address FROM stores WHERE email = $1',
       [ownerEmail]
     );
     if (stores.length === 0) {
@@ -68,7 +69,7 @@ exports.updatePassword = async (req, res) => {
       return res.status(400).json({ message: 'Old and new passwords are required.' });
     }
     // Get current hashed password
-    const [users] = await db.query('SELECT password FROM users WHERE email = ?', [ownerEmail]);
+    const { rows: users } = await db.query('SELECT password FROM users WHERE email = $1', [ownerEmail]);
     if (users.length === 0) {
       return res.status(404).json({ message: 'User not found.' });
     }
@@ -80,7 +81,7 @@ exports.updatePassword = async (req, res) => {
     }
     // Hash new password
     const hashed = await bcrypt.hash(newPassword, 10);
-    await db.query('UPDATE users SET password = ? WHERE email = ?', [hashed, ownerEmail]);
+    await db.query('UPDATE users SET password = $1 WHERE email = $2', [hashed, ownerEmail]);
     res.json({ message: 'Password updated successfully.' });
   } catch (err) {
     res.status(500).json({ message: 'Failed to update password.', error: err.message });

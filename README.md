@@ -117,3 +117,12 @@ Pull requests are welcome! For major changes, please open an issue first to disc
 - [Tailwind CSS](https://tailwindcss.com/)
 - [Render](https://render.com/)
 - [Vercel](https://vercel.com/) 
+
+---
+
+## 👤 Default Admin Credentials
+
+- **Admin Email:** admin1@gmail.com
+- **Admin Password:** Admin@123
+
+> Only this admin account can access the Admin Dashboard. Admin registration is disabled for regular users. 

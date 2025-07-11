@@ -20,4 +20,8 @@ router.put('/ratings/:storeId', authenticateJWT, updateRatingValidator, handleVa
 router.get('/ratings/:storeId', authenticateJWT, userController.getUserStoreRating);
 router.post('/user/update-password', authenticateJWT, authorizeRoles('User'), userController.updatePassword);
 
+// Aliases to match frontend requests
+router.post('/user/rate', authenticateJWT, ratingValidator, handleValidationErrors, userController.submitRating);
+router.get('/user/rate/:storeId', authenticateJWT, userController.getUserStoreRating);
+
 module.exports = router; 

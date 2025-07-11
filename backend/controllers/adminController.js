@@ -5,7 +5,7 @@ exports.createUser = async (req, res) => {
   const { name, email, password, address, role } = req.body;
   try {
     // Check if user already exists
-    const [existing] = await db.query('SELECT id FROM users WHERE email = ?', [email]);
+    const { rows: existing } = await db.query('SELECT id FROM users WHERE email = $1', [email]);
     if (existing.length > 0) {
       return res.status(409).json({ message: 'Email already registered.' });
     }
@@ -13,7 +13,7 @@ exports.createUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     // Insert user
     await db.query(
-      'INSERT INTO users (name, email, password, address, role) VALUES (?, ?, ?, ?, ?)',
+      'INSERT INTO users (name, email, password, address, role) VALUES ($1, $2, $3, $4, $5)',
       [name, email, hashedPassword, address || '', role || 'User']
     );
     res.status(201).json({ message: 'User created successfully.' });
@@ -27,14 +27,14 @@ exports.createStore = async (req, res) => {
   try {
     // If email is provided, check if store with that email exists
     if (email) {
-      const [existing] = await db.query('SELECT id FROM stores WHERE email = ?', [email]);
+      const { rows: existing } = await db.query('SELECT id FROM stores WHERE email = $1', [email]);
       if (existing.length > 0) {
         return res.status(409).json({ message: 'Store email already registered.' });
       }
     }
     // Insert store
     await db.query(
-      'INSERT INTO stores (name, email, address) VALUES (?, ?, ?)',
+      'INSERT INTO stores (name, email, address) VALUES ($1, $2, $3)',
       [name, email || null, address || '']
     );
     res.status(201).json({ message: 'Store created successfully.' });
@@ -45,13 +45,13 @@ exports.createStore = async (req, res) => {
 
 exports.dashboard = async (req, res) => {
   try {
-    const [[{ userCount }]] = await db.query('SELECT COUNT(*) AS userCount FROM users');
-    const [[{ storeCount }]] = await db.query('SELECT COUNT(*) AS storeCount FROM stores');
-    const [[{ ratingCount }]] = await db.query('SELECT COUNT(*) AS ratingCount FROM ratings');
+    const { rows: userRows } = await db.query('SELECT COUNT(*) AS userCount FROM users');
+    const { rows: storeRows } = await db.query('SELECT COUNT(*) AS storeCount FROM stores');
+    const { rows: ratingRows } = await db.query('SELECT COUNT(*) AS ratingCount FROM ratings');
     res.json({
-      totalUsers: userCount,
-      totalStores: storeCount,
-      totalRatings: ratingCount
+      totalUsers: parseInt(userRows[0].usercount),
+      totalStores: parseInt(storeRows[0].storecount),
+      totalRatings: parseInt(ratingRows[0].ratingcount)
     });
   } catch (err) {
     res.status(500).json({ message: 'Failed to fetch dashboard data.', error: err.message });
@@ -63,24 +63,28 @@ exports.listUsers = async (req, res) => {
     const { name, email, role, sortBy = 'name', order = 'asc' } = req.query;
     let query = 'SELECT id, name, email, address, role FROM users WHERE 1=1';
     const params = [];
+    let paramIndex = 1;
     if (name) {
-      query += ' AND name LIKE ?';
+      query += ` AND name LIKE $${paramIndex}`;
       params.push(`%${name}%`);
+      paramIndex++;
     }
     if (email) {
-      query += ' AND email LIKE ?';
+      query += ` AND email LIKE $${paramIndex}`;
       params.push(`%${email}%`);
+      paramIndex++;
     }
     if (role) {
-      query += ' AND role = ?';
+      query += ` AND role = $${paramIndex}`;
       params.push(role);
+      paramIndex++;
     }
     // Only allow sorting by name or email
     const allowedSort = ['name', 'email'];
     const sortField = allowedSort.includes(sortBy) ? sortBy : 'name';
     const sortOrder = order.toLowerCase() === 'desc' ? 'DESC' : 'ASC';
     query += ` ORDER BY ${sortField} ${sortOrder}`;
-    const [users] = await db.query(query, params);
+    const { rows: users } = await db.query(query, params);
     res.json(users);
   } catch (err) {
     res.status(500).json({ message: 'Failed to fetch users.', error: err.message });
@@ -94,20 +98,23 @@ exports.listStores = async (req, res) => {
       (SELECT ROUND(AVG(r.rating), 2) FROM ratings r WHERE r.store_id = s.id) AS avgRating
       FROM stores s WHERE 1=1`;
     const params = [];
+    let paramIndex = 1;
     if (name) {
-      query += ' AND s.name LIKE ?';
+      query += ` AND s.name LIKE $${paramIndex}`;
       params.push(`%${name}%`);
+      paramIndex++;
     }
     if (email) {
-      query += ' AND s.email LIKE ?';
+      query += ` AND s.email LIKE $${paramIndex}`;
       params.push(`%${email}%`);
+      paramIndex++;
     }
     // Only allow sorting by name or email
     const allowedSort = ['name', 'email'];
     const sortField = allowedSort.includes(sortBy) ? `s.${sortBy}` : 's.name';
     const sortOrder = order.toLowerCase() === 'desc' ? 'DESC' : 'ASC';
     query += ` ORDER BY ${sortField} ${sortOrder}`;
-    const [stores] = await db.query(query, params);
+    const { rows: stores } = await db.query(query, params);
     res.json(stores);
   } catch (err) {
     res.status(500).json({ message: 'Failed to fetch stores.', error: err.message });
@@ -118,11 +125,11 @@ exports.updateUser = async (req, res) => {
   try {
     const userId = req.params.id;
     const { name, email, address, role } = req.body;
-    const [existing] = await db.query('SELECT id FROM users WHERE id = ?', [userId]);
+    const { rows: existing } = await db.query('SELECT id FROM users WHERE id = $1', [userId]);
     if (existing.length === 0) {
       return res.status(404).json({ message: 'User not found.' });
     }
-    await db.query('UPDATE users SET name = ?, email = ?, address = ?, role = ? WHERE id = ?', [name, email, address, role, userId]);
+    await db.query('UPDATE users SET name = $1, email = $2, address = $3, role = $4 WHERE id = $5', [name, email, address, role, userId]);
     res.json({ message: 'User updated successfully.' });
   } catch (err) {
     res.status(500).json({ message: 'Failed to update user.', error: err.message });
@@ -134,12 +141,12 @@ exports.updateStore = async (req, res) => {
     const storeId = req.params.id;
     const { name, email, address } = req.body;
     // Check if store exists
-    const [existing] = await db.query('SELECT id FROM stores WHERE id = ?', [storeId]);
+    const { rows: existing } = await db.query('SELECT id FROM stores WHERE id = $1', [storeId]);
     if (existing.length === 0) {
       return res.status(404).json({ message: 'Store not found.' });
     }
     // Update store
-    await db.query('UPDATE stores SET name = ?, email = ?, address = ? WHERE id = ?', [name, email, address, storeId]);
+    await db.query('UPDATE stores SET name = $1, email = $2, address = $3 WHERE id = $4', [name, email, address, storeId]);
     res.json({ message: 'Store updated successfully.' });
   } catch (err) {
     res.status(500).json({ message: 'Failed to update store.', error: err.message });
@@ -151,7 +158,7 @@ exports.deleteUser = async (req, res) => {
     const userId = req.params.id;
     
     // Check if user exists and get their role and email
-    const [userData] = await db.query('SELECT id, role, email, name FROM users WHERE id = ?', [userId]);
+    const { rows: userData } = await db.query('SELECT id, role, email, name FROM users WHERE id = $1', [userId]);
     if (userData.length === 0) {
       return res.status(404).json({ message: 'User not found.' });
     }
@@ -168,25 +175,25 @@ exports.deleteUser = async (req, res) => {
     // If user is an owner, delete their associated stores and ratings first
     if (user.role === 'Owner') {
       // Get stores owned by this user (matching by email)
-      const [stores] = await db.query('SELECT id, name FROM stores WHERE email = ?', [user.email]);
+      const { rows: stores } = await db.query('SELECT id, name FROM stores WHERE email = $1', [user.email]);
       deletedData.storesDeleted = stores.length;
       
       // Delete ratings for all stores owned by this user
       for (const store of stores) {
-        const [ratingResult] = await db.query('DELETE FROM ratings WHERE store_id = ?', [store.id]);
-        deletedData.ratingsDeleted += ratingResult.affectedRows;
+        const { rowCount: ratingResult } = await db.query('DELETE FROM ratings WHERE store_id = $1', [store.id]);
+        deletedData.ratingsDeleted += ratingResult;
       }
       
       // Delete the stores owned by this user
-      await db.query('DELETE FROM stores WHERE email = ?', [user.email]);
+      await db.query('DELETE FROM stores WHERE email = $1', [user.email]);
     }
 
     // Delete ratings made by this user
-    const [userRatingResult] = await db.query('DELETE FROM ratings WHERE user_id = ?', [userId]);
-    deletedData.userRatingsDeleted = userRatingResult.affectedRows;
+    const { rowCount: userRatingResult } = await db.query('DELETE FROM ratings WHERE user_id = $1', [userId]);
+    deletedData.userRatingsDeleted = userRatingResult;
 
     // Finally delete the user from the users table
-    await db.query('DELETE FROM users WHERE id = ?', [userId]);
+    await db.query('DELETE FROM users WHERE id = $1', [userId]);
     
     // Prepare detailed response message
     let message = `User "${user.name}" (${user.role}) deleted successfully.`;
@@ -208,14 +215,14 @@ exports.deleteUser = async (req, res) => {
 exports.deleteStore = async (req, res) => {
   try {
     const storeId = req.params.id;
-    const [existing] = await db.query('SELECT id FROM stores WHERE id = ?', [storeId]);
+    const { rows: existing } = await db.query('SELECT id FROM stores WHERE id = $1', [storeId]);
     if (existing.length === 0) {
       return res.status(404).json({ message: 'Store not found.' });
     }
     // Delete ratings for this store first
-    await db.query('DELETE FROM ratings WHERE store_id = ?', [storeId]);
+    await db.query('DELETE FROM ratings WHERE store_id = $1', [storeId]);
     // Now delete the store
-    await db.query('DELETE FROM stores WHERE id = ?', [storeId]);
+    await db.query('DELETE FROM stores WHERE id = $1', [storeId]);
     res.json({ message: 'Store deleted successfully.' });
   } catch (err) {
     res.status(500).json({ message: 'Failed to delete store.', error: err.message });
@@ -232,7 +239,7 @@ exports.updatePassword = async (req, res) => {
     }
 
     // Get current hashed password
-    const [users] = await db.query('SELECT password FROM users WHERE email = ?', [adminEmail]);
+    const { rows: users } = await db.query('SELECT password FROM users WHERE email = $1', [adminEmail]);
     if (users.length === 0) {
       return res.status(404).json({ message: 'User not found.' });
     }
@@ -249,7 +256,7 @@ exports.updatePassword = async (req, res) => {
     const hashed = await bcrypt.hash(newPassword, 10);
     
     // Update password
-    await db.query('UPDATE users SET password = ? WHERE email = ?', [hashed, adminEmail]);
+    await db.query('UPDATE users SET password = $1 WHERE email = $2', [hashed, adminEmail]);
     
     res.json({ message: 'Password updated successfully.' });
   } catch (err) {

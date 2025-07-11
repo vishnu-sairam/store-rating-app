@@ -88,7 +88,7 @@ export default function StoreList({ onRate, refresh }) {
               <tr key={store.id} className="border-b">
                 <td className="px-4 py-2">{store.name}</td>
                 <td className="px-4 py-2">{store.address}</td>
-                <td className="px-4 py-2">{store.avgRating !== null && store.avgRating !== undefined ? `${store.avgRating}/5` : <span className="text-gray-400">-</span>}</td>
+                <td className="px-4 py-2">{store.avgrating !== null && store.avgrating !== undefined ? `${store.avgrating}/5` : <span className="text-gray-400">-</span>}</td>
                 <td className="px-4 py-2">
                   {userRatings[store.id]?.rating ? (
                     <StarDisplay rating={userRatings[store.id].rating} />

@@ -10,7 +10,7 @@ exports.register = async (req, res) => {
   }
   try {
     // Check if user already exists
-    const [existing] = await db.query('SELECT id FROM users WHERE email = ?', [email]);
+    const { rows: existing } = await db.query('SELECT id FROM users WHERE email = $1', [email]);
     if (existing.length > 0) {
       return res.status(409).json({ message: 'Email already registered.' });
     }
@@ -18,7 +18,7 @@ exports.register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     // Insert user
     await db.query(
-      'INSERT INTO users (name, email, password, address, role) VALUES (?, ?, ?, ?, ?)',
+      'INSERT INTO users (name, email, password, address, role) VALUES ($1, $2, $3, $4, $5)',
       [name, email, hashedPassword, address || '', role || 'User']
     );
     res.status(201).json({ message: 'User registered successfully.' });
@@ -34,7 +34,7 @@ exports.login = async (req, res) => {
     return res.status(400).json({ message: 'Email and password are required.' });
   }
   try {
-    const [users] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
+    const { rows: users } = await db.query('SELECT * FROM users WHERE email = $1', [email]);
     if (users.length === 0) {
       return res.status(401).json({ message: 'Invalid email or password.' });
     }

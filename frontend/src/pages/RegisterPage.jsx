@@ -18,6 +18,13 @@ export default function RegisterPage() {
     setError("");
     setSuccess("");
     setLoading(true);
+    // Client-side name length validation
+    if (name.length < 20 || name.length > 60) {
+      setError("Name must be between 20 and 60 characters.");
+      toast.error("Name must be between 20 and 60 characters.");
+      setLoading(false);
+      return;
+    }
     try {
       const response = await fetch("http://localhost:4000/register", {
         method: "POST",
@@ -107,7 +114,6 @@ export default function RegisterPage() {
               >
                 <option value="User">User</option>
                 <option value="Owner">Owner</option>
-                <option value="Admin">Admin</option>
               </select>
             </div>
             {error && <div className="text-red-500 text-sm text-center">{error}</div>}
