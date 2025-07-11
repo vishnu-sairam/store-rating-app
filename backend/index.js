@@ -11,7 +11,7 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 
 const corsOptions = {
-  origin: ["https://store-rating-app-24hk.vercel.app"],
+  origin: ["https://store-rating-app-m51q.vercel.app"],
   credentials: true
 };
 app.use(cors(corsOptions));
