@@ -68,13 +68,13 @@ npm start
 - Deployed to [Vercel](https://vercel.com/)
 - Build command: `npm run build`
 - Output directory: `build`
-- [Live Frontend URL](https://store-rating-app-24hk.vercel.app)
+- [Live Frontend URL](https://store-rating-app-m51q.vercel.app/)
 
 ### Backend
 - Deployed to [Render](https://render.com/)
 - Build command: `npm install`
 - Start command: `node index.js`
-- [Live Backend URL](https://store-rating-app-8.onrender.com)
+- [Live Backend URL](https://store-rating-app-9.onrender.com/)
 - Add environment variables in the Render dashboard
 
 ---
