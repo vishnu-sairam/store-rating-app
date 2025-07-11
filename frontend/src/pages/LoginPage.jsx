@@ -18,7 +18,7 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:4000/login", {
+      const response = await fetch((process.env.REACT_APP_API_URL || "https://store-rating-app-8.onrender.com") + "/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),

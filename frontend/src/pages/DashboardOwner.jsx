@@ -67,7 +67,7 @@ export default function DashboardOwner() {
       return;
     }
     try {
-      const response = await fetch("http://localhost:4000/owner/update-password", {
+      const response = await fetch((process.env.REACT_APP_API_URL || "https://store-rating-app-8.onrender.com") + "/owner/update-password", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ oldPassword: pwdForm.oldPassword, newPassword: pwdForm.newPassword })
@@ -101,7 +101,7 @@ export default function DashboardOwner() {
       setLoading(true);
       setError("");
       try {
-        const res = await fetch("http://localhost:4000/owner/store", {
+        const res = await fetch((process.env.REACT_APP_API_URL || "https://store-rating-app-8.onrender.com") + "/owner/store", {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) {
@@ -124,7 +124,7 @@ export default function DashboardOwner() {
       setLoadingAvg(true);
       setAvgError("");
       try {
-        const res = await fetch("http://localhost:4000/owner/average", {
+        const res = await fetch((process.env.REACT_APP_API_URL || "https://store-rating-app-8.onrender.com") + "/owner/average", {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) {
@@ -147,7 +147,7 @@ export default function DashboardOwner() {
       setLoadingRatings(true);
       setRatingsError("");
       try {
-        const res = await fetch("http://localhost:4000/owner/ratings", {
+        const res = await fetch((process.env.REACT_APP_API_URL || "https://store-rating-app-8.onrender.com") + "/owner/ratings", {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) {

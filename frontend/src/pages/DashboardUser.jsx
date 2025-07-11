@@ -1,6 +1,6 @@
 import StoreList from "../components/StoreList";
 import RateModal from "../components/RateModal";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from 'react-toastify';
@@ -16,6 +16,9 @@ export default function DashboardUser() {
   const [ratingSuccess, setRatingSuccess] = useState('');
   const { token, logout, user } = useAuth();
   const navigate = useNavigate();
+  const [stores, setStores] = useState([]);
+  const [storesLoading, setStoresLoading] = useState(true);
+  const [storesError, setStoresError] = useState("");
 
   // Password change modal state
   const [showPwdModal, setShowPwdModal] = useState(false);
@@ -58,7 +61,7 @@ export default function DashboardUser() {
       return;
     }
     try {
-      const response = await fetch("http://localhost:4000/user/update-password", {
+      const response = await fetch((process.env.REACT_APP_API_URL || "https://store-rating-app-8.onrender.com") + "/user/update-password", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ oldPassword: pwdForm.oldPassword, newPassword: pwdForm.newPassword })
@@ -87,7 +90,7 @@ export default function DashboardUser() {
     setSelectedStore(store);
     setSuccessMsg("");
     try {
-      const res = await fetch(`http://localhost:4000/ratings/${store.id}`, {
+      const res = await fetch((process.env.REACT_APP_API_URL || "https://store-rating-app-8.onrender.com") + `/ratings/${store.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -110,7 +113,7 @@ export default function DashboardUser() {
       let response, data;
       if (initialRating) {
         // If user has already rated, update the rating
-        response = await fetch(`http://localhost:4000/ratings/${storeId}`, {
+        response = await fetch((process.env.REACT_APP_API_URL || "https://store-rating-app-8.onrender.com") + `/ratings/${storeId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
           body: JSON.stringify({ rating, comment })
@@ -126,7 +129,7 @@ export default function DashboardUser() {
         }
       } else {
         // New rating
-        response = await fetch(`http://localhost:4000/user/rate`, {
+        response = await fetch((process.env.REACT_APP_API_URL || "https://store-rating-app-8.onrender.com") + "/user/rate", {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
           body: JSON.stringify({ storeId, rating, comment })
@@ -153,6 +156,30 @@ export default function DashboardUser() {
     setSuccessMsg("");
   };
 
+  useEffect(() => {
+    async function fetchStores() {
+      setStoresLoading(true);
+      setStoresError("");
+      try {
+        const apiBase = process.env.REACT_APP_API_URL || "https://store-rating-app-8.onrender.com";
+        const res = await fetch(`${apiBase}/stores`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.message || "Failed to fetch stores");
+        }
+        const data = await res.json();
+        setStores(data);
+      } catch (err) {
+        setStoresError(err.message);
+        setStores([]);
+      }
+      setStoresLoading(false);
+    }
+    fetchStores();
+  }, [token, refresh]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 p-8 relative">
       {loadingRating && (
@@ -164,7 +191,7 @@ export default function DashboardUser() {
         <button onClick={openPwdModal} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">Update Password</button>
       </div>
       <h1 className="text-3xl font-bold text-blue-700 mb-8 text-center">{user && user.name ? `Welcome, ${user.name}` : 'Welcome'}</h1>
-      <StoreList onRate={handleOpenRateModal} key={refresh} refresh={refresh} />
+      <StoreList onRate={handleOpenRateModal} key={refresh} refresh={refresh} stores={stores} />
       <RateModal
         store={selectedStore}
         onClose={handleCloseModal}

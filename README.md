@@ -1,6 +1,6 @@
 # Store Rating Web App
 
-A full-stack web application for rating and managing stores, featuring separate dashboards for Admin, Owner, and User roles. Built with React (frontend) and Node.js/Express (backend), with MySQL for data storage.
+A full-stack web application for rating and managing stores, featuring separate dashboards for Admin, Owner, and User roles. Built with React (frontend) and Node.js/Express (backend), with **PostgreSQL** for data storage. Deployed on **Render** (backend) and **Vercel** (frontend).
 
 ---
 
@@ -18,8 +18,9 @@ A full-stack web application for rating and managing stores, featuring separate 
 
 ## 🛠️ Tech Stack
 - **Frontend:** React, Tailwind CSS, React Router, React Toastify, React Spinners, React Icons
-- **Backend:** Node.js, Express, MySQL
+- **Backend:** Node.js, Express, **PostgreSQL**
 - **Other:** JWT Auth, REST API, CORS, Helmet
+- **Deployment:** **Render** (backend), **Vercel** (frontend)
 
 ---
 
@@ -64,15 +65,17 @@ npm start
 ## 🌐 Deployment
 
 ### Frontend
-- Deploy to [Vercel](https://vercel.com/) or [Netlify](https://netlify.com/)
+- Deployed to [Vercel](https://vercel.com/)
 - Build command: `npm run build`
 - Output directory: `build`
+- [Live Frontend URL](https://store-rating-app-24hk.vercel.app)
 
 ### Backend
-- Deploy to [Render](https://render.com/) or [Railway](https://railway.app/)
+- Deployed to [Render](https://render.com/)
 - Build command: `npm install`
 - Start command: `node index.js`
-- Add environment variables in the dashboard
+- [Live Backend URL](https://store-rating-app-8.onrender.com)
+- Add environment variables in the Render dashboard
 
 ---
 
@@ -87,7 +90,7 @@ npm test
 ```
 
 ### Backend
-- Uses Jest or Mocha/Chai (add your tests in `backend/tests`)
+- Add your tests in `backend/tests`
 - To run tests:
 ```sh
 cd backend
@@ -97,7 +100,108 @@ npm test
 ---
 
 ## 📸 Screenshots
-_Add screenshots of your app here!_
+
+### Entry Page
+![Entry Page](./screenshots/entry-page.png)
+*The landing page where users can discover, rate, and join the store rating community.*
+
+### Login Page
+![Login Page](./screenshots/login-page.png)
+*User login screen with a modern, gradient UI.*
+
+### User Dashboard
+![User Dashboard](./screenshots/user-dashboard.png)
+*Dashboard for users to view, search, and rate stores. Shows ratings and comments for each store.*
+
+### Store Analytics (Owner/Store View)
+![Store Analytics](./screenshots/store-analytics.png)
+*Store analytics page showing total ratings, most common rating, most recent rating, and a table of user ratings for a store.*
+
+---
+
+## 📑 API Documentation
+
+### Authentication
+
+#### POST `/login`
+- **Request:**
+  ```json
+  { "email": "user@example.com", "password": "Password123!" }
+  ```
+- **Response:**
+  ```json
+  { "token": "<jwt>", "user": { "id": 1, "name": "User", "email": "user@example.com", "role": "User" } }
+  ```
+
+#### POST `/register`
+- **Request:**
+  ```json
+  { "name": "User Name", "email": "user@example.com", "password": "Password123!", "address": "Address", "role": "User" }
+  ```
+- **Response:**
+  ```json
+  { "message": "User registered successfully." }
+  ```
+
+### Store Management
+
+#### GET `/stores`
+- **Headers:** `Authorization: Bearer <token>`
+- **Response:**
+  ```json
+  [ { "id": 1, "name": "Store 1", "address": "Address", "avgrating": 4.5 }, ... ]
+  ```
+
+#### POST `/admin/stores` (Admin only)
+- **Headers:** `Authorization: Bearer <token>`
+- **Request:**
+  ```json
+  { "name": "Store Name", "email": "owner@email.com", "address": "Address" }
+  ```
+- **Response:**
+  ```json
+  { "message": "Store created successfully." }
+  ```
+
+### Rating
+
+#### POST `/user/rate`
+- **Headers:** `Authorization: Bearer <token>`
+- **Request:**
+  ```json
+  { "storeId": 1, "rating": 5, "comment": "Great store!" }
+  ```
+- **Response:**
+  ```json
+  { "message": "Rating submitted successfully." }
+  ```
+
+#### GET `/ratings/:storeId`
+- **Headers:** `Authorization: Bearer <token>`
+- **Response:**
+  ```json
+  { "rating": 5, "comment": "Great store!" }
+  ```
+
+### User Management (Admin)
+
+#### GET `/admin/users`
+- **Headers:** `Authorization: Bearer <token>`
+- **Response:**
+  ```json
+  [ { "id": 1, "name": "User", "email": "user@example.com", "role": "User" }, ... ]
+  ```
+
+#### POST `/admin/users`
+- **Headers:** `Authorization: Bearer <token>`
+- **Request:**
+  ```json
+  { "name": "User Name", "email": "user@example.com", "password": "Password123!", "address": "Address", "role": "User" }
+  ```
+- **Response:**
+  ```json
+  { "message": "User created successfully." }
+  ```
 
 ---
 
@@ -116,7 +220,8 @@ Pull requests are welcome! For major changes, please open an issue first to disc
 - [Express](https://expressjs.com/)
 - [Tailwind CSS](https://tailwindcss.com/)
 - [Render](https://render.com/)
-- [Vercel](https://vercel.com/) 
+- [Vercel](https://vercel.com/)
+- [PostgreSQL](https://www.postgresql.org/)
 
 ---
 

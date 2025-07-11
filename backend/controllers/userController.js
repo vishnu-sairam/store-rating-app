@@ -10,7 +10,7 @@ exports.getStores = async (req, res) => {
     const params = [];
     let paramIndex = 1;
     if (name) {
-      query += ` AND s.name LIKE $${paramIndex}`;
+      query += ` AND s.name ILIKE $${paramIndex}`;
       params.push(`%${name}%`);
       paramIndex++;
     }

@@ -13,32 +13,23 @@ function StarDisplay({ rating }) {
   );
 }
 
-export default function StoreList({ onRate, refresh }) {
+export default function StoreList({ onRate, refresh, stores: propStores = [] }) {
   const { token } = useAuth();
-  const [stores, setStores] = useState([]);
   const [userRatings, setUserRatings] = useState({});
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
 
+  // Fetch user ratings for each store (keep this logic)
   useEffect(() => {
-    async function fetchStoresAndRatings() {
+    async function fetchRatings() {
       setLoading(true);
       try {
-        const res = await fetch(
-          `http://localhost:4000/stores?name=${encodeURIComponent(search)}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        const data = await res.json();
-        setStores(data);
-        console.log('Fetched stores:', data); // Debug log
-        // Fetch user ratings for each store
         const ratingsObj = {};
         await Promise.all(
-          data.map(async (store) => {
+          propStores.map(async (store) => {
             try {
-              const res = await fetch(`http://localhost:4000/ratings/${store.id}`, {
+              const apiBase = process.env.REACT_APP_API_URL || "https://store-rating-app-8.onrender.com";
+              const res = await fetch(`${apiBase}/ratings/${store.id}`, {
                 headers: { Authorization: `Bearer ${token}` },
               });
               if (res.ok) {
@@ -50,13 +41,20 @@ export default function StoreList({ onRate, refresh }) {
         );
         setUserRatings(ratingsObj);
       } catch {
-        setStores([]);
         setUserRatings({});
       }
       setLoading(false);
     }
-    fetchStoresAndRatings();
-  }, [search, token, refresh]);
+    fetchRatings();
+  }, [propStores, token, refresh]);
+
+  const filteredStores = propStores.filter((store) => {
+    const q = search.toLowerCase();
+    return (
+      (store.name && store.name.toLowerCase().includes(q)) ||
+      (store.address && store.address.toLowerCase().includes(q))
+    );
+  });
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
@@ -84,7 +82,7 @@ export default function StoreList({ onRate, refresh }) {
             </tr>
           </thead>
           <tbody>
-            {stores.map((store) => (
+            {filteredStores.map((store) => (
               <tr key={store.id} className="border-b">
                 <td className="px-4 py-2">{store.name}</td>
                 <td className="px-4 py-2">{store.address}</td>
@@ -113,7 +111,7 @@ export default function StoreList({ onRate, refresh }) {
                 </td>
               </tr>
             ))}
-            {stores.length === 0 && (
+            {filteredStores.length === 0 && (
               <tr>
                 <td colSpan={6} className="text-center py-4 text-gray-500">
                   No stores found.

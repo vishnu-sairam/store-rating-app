@@ -1,6 +1,6 @@
 // Admin service for API calls
 
-const API_BASE = "http://localhost:4000";
+const API_BASE = process.env.REACT_APP_API_URL || "https://store-rating-app-8.onrender.com";
 
 export async function fetchUsers(token) {
   const res = await fetch(`${API_BASE}/admin/users`, {
